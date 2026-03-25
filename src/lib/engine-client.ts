@@ -179,6 +179,10 @@ function getDemoStatus(): EngineStatus {
 
 // ── Public API ──
 
+export function getEngineUrl(): string {
+  return ENGINE_URL;
+}
+
 export async function getEngineTrades(): Promise<{ trades: EngineTradeRecord[]; isDemo: boolean }> {
   const data = await fetchEngine<{ trades: EngineTradeRecord[] }>("/api/trades");
   if (data) return { trades: data.trades, isDemo: false };

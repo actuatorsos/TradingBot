@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="zapGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00f0ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="128" height="128" fill="#050810"/>
+
+  <!-- Rounded square container -->
+  <rect x="16" y="16" width="96" height="96" rx="20" ry="20" fill="none" stroke="url(#zapGradient)" stroke-width="2" opacity="0.3"/>
+
+  <!-- Lightning bolt (Zap) -->
+  <path d="M 64 20 L 48 60 L 58 60 L 50 100 L 80 60 L 70 60 Z"
+        fill="url(#zapGradient)"
+        filter="url(#softGlow)"
+        stroke="url(#zapGradient)"
+        stroke-width="0.5"
+        stroke-linejoin="round"
+        stroke-linecap="round"/>
+
+  <!-- Inner glow accent -->
+  <circle cx="64" cy="64" r="40" fill="none" stroke="url(#zapGradient)" stroke-width="1" opacity="0.2"/>
+</svg>

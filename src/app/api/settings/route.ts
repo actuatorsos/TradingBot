@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readFile, writeFile, mkdir } from "fs/promises";
+import { readFile, writeFile } from "fs/promises";
 import { join } from "path";
 
 const SETTINGS_PATH = join(process.cwd(), "settings.json");
