@@ -1,0 +1,26 @@
+[Unit]
+Description=Apex Trader AI - Execution Engine
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/apex-trader
+EnvironmentFile=/opt/apex-trader/.env
+ExecStart=/opt/apex-trader/venv/bin/python -m engine.main
+Restart=always
+RestartSec=10
+StandardOutput=append:/opt/apex-trader/logs/engine.log
+StandardError=append:/opt/apex-trader/logs/engine-error.log
+
+# Watchdog
+WatchdogSec=300
+
+# Security
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/apex-trader/logs /opt/apex-trader
+
+[Install]
+WantedBy=multi-user.target
