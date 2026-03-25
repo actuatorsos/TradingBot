@@ -121,6 +121,8 @@ export default function Dashboard() {
   const [market, setMarket] = useState<MarketData | null>(null);
   const [signalData, setSignalData] = useState<SignalData | null>(null);
   const [status, setStatus] = useState<StatusData | null>(null);
+  const [tradeStats, setTradeStats] = useState<{ total: number; wins: number; win_rate: number; total_pnl: number; profit_factor: number; demo: boolean } | null>(null);
+  const [openPositions, setOpenPositions] = useState<{ count: number; unrealized: number; demo: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState(true);
@@ -130,12 +132,16 @@ export default function Dashboard() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [mRes, sRes, stRes] = await Promise.all([
+      const [mRes, sRes, stRes, tRes, pRes] = await Promise.all([
         fetch("/api/market").then(r => r.json()).catch(() => null),
         fetch("/api/signals").then(r => r.json()).catch(() => null),
         fetch("/api/status").then(r => r.json()).catch(() => null),
+        fetch("/api/trades").then(r => r.json()).catch(() => null),
+        fetch("/api/positions").then(r => r.json()).catch(() => null),
       ]);
       setMarket(mRes); setSignalData(sRes); setStatus(stRes);
+      if (tRes?.success) setTradeStats({ total: tRes.summary?.total_trades || 0, wins: tRes.summary?.wins || 0, win_rate: tRes.summary?.win_rate || 0, total_pnl: tRes.summary?.total_pnl || 0, profit_factor: tRes.summary?.profit_factor || 0, demo: tRes.demo_mode });
+      if (pRes?.success) setOpenPositions({ count: pRes.summary?.total_positions || 0, unrealized: pRes.summary?.total_unrealized_pnl || 0, demo: pRes.demo_mode });
       setIsConnected(true); setLastUpdate(new Date());
     } catch { setIsConnected(false); } finally { setLoading(false); }
   }, []);
@@ -301,6 +307,33 @@ export default function Dashboard() {
             </div>
           )}
         </SpotlightCard>
+
+        {/* ═══════ PERFORMANCE STRIP ═══════ */}
+        {tradeStats && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5 animate-slide-up stagger-2">
+            {[
+              { label: "Total Trades", value: tradeStats.total.toString(), icon: History, color: "text-apex-accent" },
+              { label: "Win Rate", value: `${tradeStats.win_rate.toFixed(1)}%`, icon: Target, color: tradeStats.win_rate >= 50 ? "text-apex-green" : "text-apex-red" },
+              { label: "Total P&L", value: `$${tradeStats.total_pnl >= 0 ? "+" : ""}${tradeStats.total_pnl.toFixed(2)}`, icon: TrendingUp, color: tradeStats.total_pnl >= 0 ? "text-apex-green" : "text-apex-red" },
+              { label: "Profit Factor", value: tradeStats.profit_factor.toFixed(2), icon: Zap, color: tradeStats.profit_factor >= 1 ? "text-apex-green" : "text-apex-red" },
+              { label: "Open Positions", value: openPositions?.count.toString() || "0", icon: Crosshair, color: "text-purple-400" },
+              { label: "Unrealized P&L", value: `$${(openPositions?.unrealized || 0) >= 0 ? "+" : ""}${(openPositions?.unrealized || 0).toFixed(2)}`, icon: Activity, color: (openPositions?.unrealized || 0) >= 0 ? "text-apex-green" : "text-apex-red" },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-xl border border-white/[0.05] bg-white/[0.015] backdrop-blur-sm p-4 hover:border-white/[0.1] transition-all duration-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <stat.icon className={`w-3.5 h-3.5 ${stat.color} opacity-60`} />
+                  <span className="text-[9px] text-apex-muted uppercase tracking-[0.15em] font-mono">{stat.label}</span>
+                </div>
+                <div className={`text-lg font-mono font-bold ${stat.color}`}>{stat.value}</div>
+              </div>
+            ))}
+            {tradeStats.demo && (
+              <div className="col-span-full flex justify-center">
+                <span className="text-[9px] px-2 py-0.5 rounded-full bg-apex-amber/10 border border-apex-amber/20 text-apex-amber font-mono">DEMO MODE — Paper Trading</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ═══════ BENTO GRID ═══════ */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-5">
