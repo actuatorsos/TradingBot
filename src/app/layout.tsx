@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="mesh-bg noise antialiased">
+      <body className="mesh-bg antialiased">
         {children}
       </body>
     </html>
