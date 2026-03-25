@@ -6,15 +6,20 @@ import Link from "next/link";
 import {
   Activity, History, Crosshair, LineChart, Settings2, Zap,
   BookOpen, BarChart3, Heart, ShieldOff, Newspaper, Menu, X,
+  CandlestickChart, FlaskConical, Grid3X3, Rocket,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: Activity },
+  { href: "/chart", label: "Chart", icon: CandlestickChart },
   { href: "/trades", label: "Trades", icon: History },
   { href: "/positions", label: "Positions", icon: Crosshair },
   { href: "/equity", label: "Equity", icon: LineChart },
   { href: "/journal", label: "Journal", icon: BookOpen },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/backtest", label: "Backtest", icon: FlaskConical },
+  { href: "/news", label: "News", icon: Newspaper },
+  { href: "/correlation", label: "Correlation", icon: Grid3X3 },
   { href: "/health", label: "Health", icon: Heart },
   { href: "/kill-switch", label: "Kill Switch", icon: ShieldOff },
   { href: "/settings", label: "Settings", icon: Settings2 },
