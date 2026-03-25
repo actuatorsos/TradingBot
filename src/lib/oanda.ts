@@ -1,6 +1,6 @@
 /**
  * OANDA Exchange Rates API Client
- * Fetches live forex spot rates and historical data
+ * Fetches forex spot rates (historical for free-tier, real-time for paid)
  */
 
 const OANDA_BASE_URL = "https://web-services.oanda.com/rates/api/v2/rates";
@@ -24,6 +24,20 @@ export interface CandleData {
   volume: number;
 }
 
+/**
+ * Get the nearest valid OANDA API timestamp (must be on 00/15/30/45 minute boundary)
+ * Free tier only allows historical data, so we use a recent valid date
+ */
+function getOandaTimestamp(): string {
+  // Use a recent date that falls within the API's allowed range
+  // The free tier allows dates within a 1-year rolling window
+  const now = new Date();
+  // Go back 1 day to ensure it's available, align to 15-min boundary
+  now.setDate(now.getDate() - 1);
+  now.setMinutes(Math.floor(now.getMinutes() / 15) * 15, 0, 0);
+  return now.toISOString().replace(/\.\d{3}Z$/, "+00:00");
+}
+
 export async function fetchSpotRate(
   base: string = "EUR",
   quote: string = "USD"
@@ -35,12 +49,13 @@ export async function fetchSpotRate(
   }
 
   try {
-    const url = `${OANDA_BASE_URL}/spot.json?base=${base}&quote=${quote}&decimal_places=5`;
+    const dateTime = getOandaTimestamp();
+    const url = `${OANDA_BASE_URL}/spot.json?base=${base}&quote=${quote}&date_time=${encodeURIComponent(dateTime)}`;
     const res = await fetch(url, {
       headers: {
         "Authorization": `Bearer ${apiKey}`,
       },
-      next: { revalidate: 10 },
+      next: { revalidate: 60 },
     });
 
     if (!res.ok) {
@@ -65,7 +80,7 @@ export async function fetchSpotRate(
       ask,
       midpoint,
       spread: parseFloat(((ask - bid) * 10000).toFixed(1)),
-      timestamp: new Date().toISOString(),
+      timestamp: quote_data.date_time || new Date().toISOString(),
     };
   } catch (err) {
     console.error("Failed to fetch spot rate:", err);
@@ -87,10 +102,6 @@ export async function fetchMultipleRates(
   if (!apiKey) return [];
 
   try {
-    const quotes = pairs.map((p) => p[1]).join(",");
-    const base = pairs[0][0];
-
-    // Fetch all at once where possible
     const results: SpotRate[] = [];
     for (const [b, q] of pairs) {
       const rate = await fetchSpotRate(b, q);
