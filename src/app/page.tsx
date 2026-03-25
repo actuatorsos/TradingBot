@@ -18,7 +18,9 @@ import {
   Target,
   AlertTriangle,
   ChevronRight,
+  Settings2,
 } from "lucide-react";
+import Link from "next/link";
 
 interface SpotRate {
   base: string;
@@ -165,6 +167,13 @@ export default function Dashboard() {
               {isConnected ? "Connected" : "Disconnected"}
             </span>
           </div>
+          <Link
+            href="/settings"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-apex-border bg-apex-surface/50 hover:bg-apex-card text-sm text-apex-muted hover:text-white transition-all"
+          >
+            <Settings2 className="w-3.5 h-3.5" />
+            Settings
+          </Link>
           <button
             onClick={fetchData}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-apex-border bg-apex-surface/50 hover:bg-apex-card text-sm text-apex-muted hover:text-white transition-all"
