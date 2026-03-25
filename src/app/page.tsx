@@ -5,7 +5,7 @@ import {
   Activity, TrendingUp, TrendingDown, Shield, Zap, BarChart3,
   RefreshCw, Wifi, WifiOff, ArrowUpRight, ArrowDownRight, Minus,
   Clock, Target, AlertTriangle, ChevronRight, Settings2, Radio,
-  Globe, Sun, Moon, Sunrise,
+  Globe, Sun, Moon, Sunrise, History, LineChart, Crosshair,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -499,9 +499,31 @@ export default function Dashboard() {
           </SpotlightCard>
         )}
 
+        {/* ═══════ QUICK NAV ═══════ */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5 animate-slide-up stagger-8">
+          {[
+            { href: "/trades", icon: History, label: "Trade History", desc: "View all executed trades, win rate & P&L", gradient: "from-apex-green/15 to-apex-accent/10", border: "border-apex-green/20", iconColor: "text-apex-green" },
+            { href: "/positions", icon: Crosshair, label: "Open Positions", desc: "Monitor live positions & unrealized P&L", gradient: "from-apex-accent/15 to-purple-500/10", border: "border-apex-accent/20", iconColor: "text-apex-accent" },
+            { href: "/equity", icon: LineChart, label: "Equity Curve", desc: "Track balance growth & drawdown over time", gradient: "from-purple-500/15 to-apex-accent/10", border: "border-purple-500/20", iconColor: "text-purple-400" },
+          ].map((nav) => (
+            <Link key={nav.href} href={nav.href}>
+              <SpotlightCard className="p-5 group cursor-pointer hover:border-white/10 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${nav.gradient} border ${nav.border} flex items-center justify-center`}>
+                    <nav.icon className={`w-4 h-4 ${nav.iconColor}`} />
+                  </div>
+                  <h3 className="text-sm font-semibold text-white font-[Outfit] group-hover:text-apex-accent transition-colors">{nav.label}</h3>
+                  <ChevronRight className="w-4 h-4 text-apex-muted/40 ml-auto group-hover:text-apex-accent group-hover:translate-x-1 transition-all" />
+                </div>
+                <p className="text-[10px] text-apex-muted font-mono pl-12">{nav.desc}</p>
+              </SpotlightCard>
+            </Link>
+          ))}
+        </div>
+
         {/* ═══════ FOOTER ═══════ */}
         <footer className="mt-4 text-center text-[9px] text-apex-muted/30 font-mono pb-4 tracking-[0.15em]">
-          APEX TRADER AI v{status?.version || "1.0.0"} &middot; 9-Indicator Confluence Engine &middot; Live Forex Data
+          APEX TRADER AI v{status?.version || "2.0.0"} &middot; 9-Indicator Confluence Engine &middot; Live Forex Data
         </footer>
       </div>
     </div>
