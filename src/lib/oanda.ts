@@ -3,7 +3,7 @@
  * Fetches live forex spot rates and historical data
  */
 
-const OANDA_BASE_URL = "https://www.oanda.com/rates/api/v2/rates";
+const OANDA_BASE_URL = "https://web-services.oanda.com/rates/api/v2/rates";
 
 export interface SpotRate {
   base: string;
@@ -35,11 +35,17 @@ export async function fetchSpotRate(
   }
 
   try {
-    const url = `${OANDA_BASE_URL}/spot.json?api_key=${apiKey}&base=${base}&quote=${quote}&decimal_places=5`;
-    const res = await fetch(url, { next: { revalidate: 10 } });
+    const url = `${OANDA_BASE_URL}/spot.json?base=${base}&quote=${quote}&decimal_places=5`;
+    const res = await fetch(url, {
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      next: { revalidate: 10 },
+    });
 
     if (!res.ok) {
-      console.error(`OANDA API error: ${res.status}`);
+      const errText = await res.text().catch(() => "");
+      console.error(`OANDA API error: ${res.status} - ${errText}`);
       return null;
     }
 
