@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getEngineTrades } from "@/lib/engine-client";
+import { getAllTrades, isOandaConfigured } from "@/lib/oanda-v20";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +8,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const format = searchParams.get("format") || "csv";
 
-    const { trades, isDemo } = await getEngineTrades();
+    if (!isOandaConfigured()) {
+      return NextResponse.json({ success: false, error: "OANDA not configured" }, { status: 503 });
+    }
+    const trades = await getAllTrades(200);
 
     if (format === "csv") {
       const headers = ["ID", "Pair", "Direction", "Status", "Entry Price", "Exit Price", "Stop Loss", "Take Profit", "P&L ($)", "Lot Size", "Confidence", "Open Time", "Close Time"];
@@ -23,7 +26,7 @@ export async function GET(request: Request) {
         t.take_profit,
         t.pnl ?? "",
         t.lot_size,
-        t.confidence,
+        "",
         t.open_time,
         t.close_time || "",
       ].join(","));
@@ -33,7 +36,7 @@ export async function GET(request: Request) {
       return new Response(csv, {
         headers: {
           "Content-Type": "text/csv",
-          "Content-Disposition": `attachment; filename="apex-trades-${new Date().toISOString().split("T")[0]}${isDemo ? "-demo" : ""}.csv"`,
+          "Content-Disposition": `attachment; filename="apex-trades-${new Date().toISOString().split("T")[0]}.csv"`,
         },
       });
     }
@@ -41,7 +44,7 @@ export async function GET(request: Request) {
     // JSON format
     return NextResponse.json({
       success: true,
-      demo_mode: isDemo,
+      live: true,
       trades,
       exported_at: new Date().toISOString(),
     });

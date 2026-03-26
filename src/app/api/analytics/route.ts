@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server";
-import { getEngineTrades } from "@/lib/engine-client";
+import { getClosedTrades, isOandaConfigured, getConnectionInfo } from "@/lib/oanda-v20";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const { trades, isDemo } = await getEngineTrades();
+    if (!isOandaConfigured()) {
+      return NextResponse.json({
+        success: false,
+        error: "OANDA v20 not configured",
+        connection: getConnectionInfo(),
+      }, { status: 503 });
+    }
 
-    const closedTrades = trades
+    const rawTrades = await getClosedTrades(200);
+
+    const closedTrades = rawTrades
       .filter((t) => t.status === "closed" && t.pnl != null)
       .map((t) => ({ ...t, pnl: t.pnl as number }));
     const wins = closedTrades.filter((t) => t.pnl > 0);
@@ -147,7 +155,8 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      demo_mode: isDemo,
+      live: true,
+      connection: getConnectionInfo(),
       metrics: {
         total_trades: closedTrades.length,
         win_rate: parseFloat(winRate.toFixed(2)),
