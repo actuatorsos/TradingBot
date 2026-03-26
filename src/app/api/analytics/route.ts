@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getClosedTrades, isOandaConfigured, getConnectionInfo } from "@/lib/oanda-v20";
+import { getClosedTrades, isOandaConfigured, getConnectionInfo } from "@/lib/capital-com";
 
 export const dynamic = "force-dynamic";
 

@@ -2,5 +2,6 @@
 
 from .base import BaseBroker
 from .oanda import OandaBroker
+from .capital import CapitalBroker
 
-__all__ = ["BaseBroker", "OandaBroker"]
+__all__ = ["BaseBroker", "OandaBroker", "CapitalBroker"]

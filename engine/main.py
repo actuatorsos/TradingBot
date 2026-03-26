@@ -32,6 +32,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from engine.config import EngineConfig, ConfigLoader
 from engine.broker.base import Candle
 from engine.broker.oanda import OandaBroker
+from engine.broker.capital import CapitalBroker
 from engine.signals.engine import SignalEngine
 from engine.signals.indicators import calc_atr
 from engine.data.candles import CandleManager
@@ -77,11 +78,20 @@ class ApexTraderEngine:
             self.broker = PaperTrader(initial_balance=config.paper_balance)
         else:
             log.info("🟢 LIVE TRADING MODE - Real orders will be placed!")
-            self.broker = OandaBroker(
-                api_key=config.oanda_api_key,
-                account_id=config.oanda_account_id,
-                practice=config.oanda_practice,
-            )
+            broker_type = getattr(config, "broker", "capital")
+            if broker_type == "capital" and getattr(config, "capital", None):
+                self.broker = CapitalBroker(
+                    api_key=config.capital.api_key,
+                    identifier=config.capital.identifier,
+                    password=config.capital.password,
+                    demo=config.capital.demo,
+                )
+            else:
+                self.broker = OandaBroker(
+                    api_key=config.oanda_api_key,
+                    account_id=config.oanda_account_id,
+                    practice=config.oanda_practice,
+                )
 
         # ── Risk Manager ──
         self.risk_manager = RiskManager(

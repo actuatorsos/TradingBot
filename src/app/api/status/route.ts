@@ -4,7 +4,7 @@ import {
   getOpenTrades,
   isOandaConfigured,
   getConnectionInfo,
-} from "@/lib/oanda-v20";
+} from "@/lib/capital-com";
 
 export const dynamic = "force-dynamic";
 

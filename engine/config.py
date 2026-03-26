@@ -12,10 +12,20 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class OandaConfig:
-    """OANDA broker configuration."""
+    """OANDA broker configuration (legacy)."""
     api_key: str
     account_id: Optional[str] = None
     base_url: str = "https://api-fxpractice.oanda.com"
+    request_timeout: int = 30
+
+
+@dataclass
+class CapitalConfig:
+    """Capital.com broker configuration."""
+    api_key: str
+    identifier: str = ""
+    password: str = ""
+    demo: bool = True
     request_timeout: int = 30
 
 
@@ -58,6 +68,8 @@ class NotificationConfig:
 class EngineConfig:
     """Complete engine configuration."""
     oanda: OandaConfig
+    capital: Optional[CapitalConfig] = None
+    broker: str = "capital"  # "oanda" or "capital"
     trading: TradingConfig
     risk: RiskConfig
     notifications: NotificationConfig
@@ -120,8 +132,14 @@ class ConfigLoader:
         self._validate_config(config_dict)
 
         # Build config objects
+        capital_cfg = None
+        if config_dict.get("capital", {}).get("api_key"):
+            capital_cfg = CapitalConfig(**config_dict["capital"])
+
         self.config = EngineConfig(
             oanda=OandaConfig(**config_dict["oanda"]),
+            capital=capital_cfg,
+            broker=config_dict.get("broker", "capital"),
             trading=TradingConfig(**config_dict["trading"]),
             risk=RiskConfig(**config_dict["risk"]),
             notifications=NotificationConfig(**config_dict["notifications"]),
@@ -138,10 +156,18 @@ class ConfigLoader:
     def _get_defaults() -> dict:
         """Get default configuration values."""
         return {
+            "broker": "capital",
             "oanda": {
                 "api_key": "",
                 "account_id": None,
                 "base_url": "https://api-fxpractice.oanda.com",
+                "request_timeout": 30,
+            },
+            "capital": {
+                "api_key": "",
+                "identifier": "",
+                "password": "",
+                "demo": True,
                 "request_timeout": 30,
             },
             "trading": {
@@ -178,13 +204,27 @@ class ConfigLoader:
 
     def _override_from_env(self, config_dict: dict) -> dict:
         """Override config with environment variables."""
-        # OANDA settings
+        # Broker selection
+        if broker := os.getenv(f"{self.env_prefix}BROKER"):
+            config_dict["broker"] = broker.lower()
+
+        # OANDA settings (legacy)
         if api_key := os.getenv(f"{self.env_prefix}OANDA_API_KEY"):
             config_dict["oanda"]["api_key"] = api_key
         if account_id := os.getenv(f"{self.env_prefix}OANDA_ACCOUNT_ID"):
             config_dict["oanda"]["account_id"] = account_id
         if base_url := os.getenv(f"{self.env_prefix}OANDA_BASE_URL"):
             config_dict["oanda"]["base_url"] = base_url
+
+        # Capital.com settings
+        if cap_key := os.getenv(f"{self.env_prefix}CAPITAL_API_KEY", os.getenv("CAPITAL_API_KEY")):
+            config_dict["capital"]["api_key"] = cap_key
+        if cap_id := os.getenv(f"{self.env_prefix}CAPITAL_IDENTIFIER", os.getenv("CAPITAL_IDENTIFIER")):
+            config_dict["capital"]["identifier"] = cap_id
+        if cap_pw := os.getenv(f"{self.env_prefix}CAPITAL_PASSWORD", os.getenv("CAPITAL_PASSWORD")):
+            config_dict["capital"]["password"] = cap_pw
+        if cap_demo := os.getenv(f"{self.env_prefix}CAPITAL_DEMO", os.getenv("CAPITAL_DEMO")):
+            config_dict["capital"]["demo"] = cap_demo.lower() in ("true", "1", "yes")
 
         # Trading settings
         if lot_size := os.getenv(f"{self.env_prefix}TRADING_LOT_SIZE"):
@@ -226,9 +266,14 @@ class ConfigLoader:
     @staticmethod
     def _validate_config(config_dict: dict) -> None:
         """Validate required configuration fields."""
-        if not config_dict["oanda"]["api_key"]:
+        broker = config_dict.get("broker", "capital")
+        if broker == "oanda" and not config_dict["oanda"]["api_key"]:
             raise ValueError(
                 "OANDA API key is required. Set via APEX_OANDA_API_KEY env var or config file."
+            )
+        if broker == "capital" and not config_dict.get("capital", {}).get("api_key"):
+            raise ValueError(
+                "Capital.com API key is required. Set via CAPITAL_API_KEY env var or config file."
             )
 
     def to_dict(self) -> dict:
